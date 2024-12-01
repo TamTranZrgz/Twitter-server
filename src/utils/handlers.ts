@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction, RequestHandler } from 'express'
 
-export const wrapRequestHandler = (func: RequestHandler) => {
-  return async (req: Request, res: Response, next: NextFunction) => {
+export const wrapRequestHandler = <P>(func: RequestHandler<P>) => {
+  return async (req: Request<P>, res: Response, next: NextFunction) => {
     // 1. Use try catch
     // We only need to try catch one time here in handler, dont need to try catch other function called inside this block (ex: register)
     // if there is error in the block 'try', code will jump right into 'catch' block
