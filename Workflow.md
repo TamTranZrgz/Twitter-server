@@ -172,3 +172,5 @@ Note: we can not modify `index`, we can only delete it, and create new one
 - Advanatges of `index`: increate time of retrieving data, therefore decrease time to return result. Disavantages: will increase occupancy of memory (dung luong luu tru) by creating an index table.
 
 Note: 1 collection only has maximum 64 index. 1 collection only has 1 index text. If you want more than 1 `index text`, use `compound`
+
+- Optimize `index` when initiate server: normally, everytime we initialize the server, the `index` process will repeat again. It will affect performance, but not logic. So we will modify code to assure that `index` process will not be repeated again, by using `async` and check if `index` has been existed in db

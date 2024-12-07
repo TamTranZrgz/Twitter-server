@@ -38,10 +38,36 @@ class DatabaseService {
 
   // check funtions from userServices to find out which properties we have been using for 'find' method
   // indexUsers will be called after database has been
-  indexUsers() {
-    this.users.createIndex({ email: 1, password: 1 })
-    this.users.createIndex({ email: 1 }, { unique: true })
-    this.users.createIndex({ username: 1 }, { unique: true })
+  async indexUsers() {
+    const exists = await this.users.indexExists(['email_1_password_1', 'email_1', 'username_1'])
+    // console.log('exists', exists)
+    if (!exists) {
+      this.users.createIndex({ email: 1, password: 1 })
+      this.users.createIndex({ email: 1 }, { unique: true })
+      this.users.createIndex({ username: 1 }, { unique: true })
+    }
+  }
+
+  async indexRefreshTokens() {
+    const exists = await this.refreshTokens.indexExists(['token_1', 'exp_1'])
+    // console.log('exists', exists)
+    if (!exists) {
+      this.refreshTokens.createIndex({ token: 1 })
+      this.refreshTokens.createIndex(
+        { exp: 1 },
+        {
+          expireAfterSeconds: 0
+        }
+      )
+    }
+  }
+
+  async indexFollowers() {
+    const exists = await this.followers.indexExists(['user_id_1_followed_user_id_1'])
+    // console.log('exists', exists)
+    if (!exists) {
+      this.followers.createIndex({ user_id: 1, followed_user_id: 1 })
+    }
   }
 
   // create a getter function to get users collection

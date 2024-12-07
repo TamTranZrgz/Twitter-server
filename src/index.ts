@@ -14,6 +14,8 @@ config()
 // connect to MongoDb Atlas by mongodb driver
 databaseService.connect().then(() => {
   databaseService.indexUsers()
+  databaseService.indexRefreshTokens()
+  databaseService.indexFollowers()
 })
 
 const app = express()
