@@ -174,3 +174,37 @@ Note: we can not modify `index`, we can only delete it, and create new one
 Note: 1 collection only has maximum 64 index. 1 collection only has 1 index text. If you want more than 1 `index text`, use `compound`
 
 - Optimize `index` when initiate server: normally, everytime we initialize the server, the `index` process will repeat again. It will affect performance, but not logic. So we will modify code to assure that `index` process will not be repeated again, by using `async` and check if `index` has been existed in db
+
+## 148 - 174. Tweet functions
+
+- Create `Tweet` schema -> Tweet will have following properties and functions: containing text, hashtags, mentions, images, videos; can be displayed for everyone or only Tweet circle; difining who can cmt (everyone, who we are following, or who we are mentioning); will have nested tweet (tweet which contain children). 
+
+```ts
+// schema
+interface Tweet {
+  _id: ObjectId
+  user_id: ObjectId
+  type: TweetType
+  audience: TweetAudience
+  content: string
+  parent_id: null | ObjectId //  null when it's the orginal
+  hashtags: ObjectId[]
+  mentions: ObjectId[]
+  medias: Media[]
+  guest_views: number
+  user_views: number
+  created_at: Date
+  updated_at: Date
+}
+
+// client sends data in request body
+interface TweetReqBody {
+  type: TweetType
+  audience: TweetAudience
+  content: string
+  parent_id: null | string //  null when it's the orginal, or tweet_id as string
+  hashtags: string[] // client sends hashtag in req as string
+  mentions: string[] // string has type of user_id
+  medias: Media[]
+}
+```
