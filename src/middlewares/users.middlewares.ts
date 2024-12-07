@@ -11,10 +11,10 @@ import { REGEX_USERNAME } from '~/constants/regex'
 import { ErrorWithStatus } from '~/models/Errors'
 import { TokenPayload } from '~/models/requests/User.requests'
 import databaseService from '~/services/database.services'
-import usersService from '~/services/users.services.ts'
+import usersService from '~/services/users.services'
 import { hashPassword } from '~/utils/crypto'
 import { verifyToken } from '~/utils/jwt'
-import { validate } from '~/utils/validation.ts'
+import { validate } from '~/utils/validation'
 
 // checkSchema will check both `header` and `body`
 // we should regular to optimize performance
@@ -337,10 +337,11 @@ export const refreshTokenValidator = validate(
                 // verify refresh_token
                 verifyToken({ token: value, secretOrPublicKey: process.env.JWT_SECRET_REFRESH_TOKEN as string }),
                 // check if available in db
-                databaseService.refreshToken.findOne({
+                databaseService.refreshTokens.findOne({
                   token: value
                 })
               ])
+
               if (refresh_token === null) {
                 throw new ErrorWithStatus({
                   message: USERS_MESSAGES.REFRESH_TOKEN_IS_ALREADY_USED_OR_NOT_EXIST,

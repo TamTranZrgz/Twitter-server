@@ -51,6 +51,7 @@ export const USERS_MESSAGES = {
   REFRESH_TOKEN_IS_REQUIRED: 'Refresh_token is required',
   REFRESH_TOKEN_IS_INVALID: 'Refresh_token is invalid',
   REFRESH_TOKEN_IS_ALREADY_USED_OR_NOT_EXIST: 'Refresh_token is already used or not exist',
+  REFRESH_TOKEN_SUCCESS: 'Refresh token success',
 
   // Check email_verify_token
   EMAIL_VERIFY_TOKEN_IS_REQUIRED: 'Email_verify_token is required',
@@ -109,5 +110,8 @@ export const USERS_MESSAGES = {
   INVALID_USER_ID: 'Invalid user_id',
   FOLLOWED: 'Followed',
   ALREADY_UNFOLLOWED: 'Already unfollowed',
-  UNFOLLOW_SUCCESS: 'Unfollow success'
+  UNFOLLOW_SUCCESS: 'Unfollow success',
+
+  // Image
+  UPLOAD_SUCCESS: 'Upload success'
 } as const

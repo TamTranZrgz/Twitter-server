@@ -36,6 +36,14 @@ class DatabaseService {
     }
   }
 
+  // check funtions from userServices to find out which properties we have been using for 'find' method
+  // indexUsers will be called after database has been
+  indexUsers() {
+    this.users.createIndex({ email: 1, password: 1 })
+    this.users.createIndex({ email: 1 }, { unique: true })
+    this.users.createIndex({ username: 1 }, { unique: true })
+  }
+
   // create a getter function to get users collection
   get users(): Collection<User> {
     // console.log(process.env.DB_USERS_COLLECTION)

@@ -1,16 +1,16 @@
 import { ObjectId } from 'mongodb'
 import axios from 'axios'
-import { RegisterReqBody, UpdateMeReqBody } from '~/models/requests/User.requests.ts'
-import { hashPassword } from '~/utils/crypto.ts'
-import { signToken } from '~/utils/jwt.ts'
-import { TokenType, UserVerifyStatus } from '~/constants/enum.ts'
-import RefreshToken from '~/models/schemas/RefreshToken.schema.ts'
-import User from '~/models/schemas/User.schema.ts'
-import databaseService from './database.services.ts'
-import { USERS_MESSAGES } from '~/constants/messages.ts'
-import { ErrorWithStatus } from '~/models/Errors.ts'
-import HTTP_STATUS from '~/constants/httpStatus.ts'
-import Follower from '~/models/schemas/Follower.schema.ts'
+import { RefreshTokenReqBody, RegisterReqBody, UpdateMeReqBody } from '~/models/requests/User.requests'
+import { hashPassword } from '~/utils/crypto'
+import { signToken } from '~/utils/jwt'
+import { TokenType, UserVerifyStatus } from '~/constants/enum'
+import RefreshToken from '~/models/schemas/RefreshToken.schema'
+import User from '~/models/schemas/User.schema'
+import databaseService from './database.services'
+import { USERS_MESSAGES } from '~/constants/messages'
+import { ErrorWithStatus } from '~/models/Errors'
+import HTTP_STATUS from '~/constants/httpStatus'
+import Follower from '~/models/schemas/Follower.schema'
 
 class UsersService {
   // Token services
@@ -233,6 +233,7 @@ class UsersService {
       })
     )
 
+    // console.log(refresh_token)
     return {
       access_token,
       refresh_token
@@ -245,6 +246,37 @@ class UsersService {
     })
     return {
       message: USERS_MESSAGES.LOGOUT_SUCCESS
+    }
+  }
+
+  async refreshToken({
+    user_id,
+    verify,
+    refresh_token
+  }: {
+    user_id: string
+    verify: UserVerifyStatus
+    refresh_token: string
+  }) {
+    const [new_access_token, new_refresh_token] = await Promise.all([
+      this.signAccessToken({ user_id, verify }),
+      this.signRefreshToken({ user_id, verify }),
+      databaseService.refreshTokens.deleteOne({
+        token: refresh_token
+      })
+    ])
+
+    // insert refresh_token to database
+    await databaseService.refreshTokens.insertOne(
+      new RefreshToken({
+        user_id: new ObjectId(user_id),
+        token: refresh_token
+      })
+    )
+
+    return {
+      access_token: new_access_token,
+      refresh_token: new_refresh_token
     }
   }
 

@@ -14,7 +14,8 @@ import {
   unfollowController,
   updateMeController,
   verifyEmailController,
-  verifyForgotPasswordController
+  verifyForgotPasswordController,
+  refreshTokenController
 } from '~/controllers/users.controllers'
 import { filterMiddleware } from '~/middlewares/common.middlewares'
 import {
@@ -69,6 +70,15 @@ usersRouter.post('/register', registerValidator, wrapRequestHandler(registerCont
  * Body: { refresh_token: string }
  */
 usersRouter.post('/logout', accessTokenValidator, refreshTokenValidator, wrapRequestHandler(logoutController))
+
+/**
+ * Description: Refresh Token
+ * Path: /refresh-token
+ * Method: POST
+ * Header: not needed, because access_token has been expired, not authorization needed
+ * Body: { refresh_token: string } // when server recieves, get id_user, create new access_token and new refresh_token, delete old refresh_token in database
+ */
+usersRouter.post('/refresh-token', refreshTokenValidator, wrapRequestHandler(refreshTokenController))
 
 /**
  * Description: Verify email when user clicks on on link which is inside email
