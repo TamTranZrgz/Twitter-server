@@ -8,6 +8,7 @@ import { initFolder } from './utils/file'
 import { UPLOAD_VIDEO_DIR } from './constants/dir'
 import staticRouter from './routes/static.routes'
 import { MongoClient } from 'mongodb'
+import tweetsRouter from './routes/tweets.routes'
 
 config()
 
@@ -29,6 +30,7 @@ initFolder()
 app.use(express.json())
 app.use('/users', usersRouter)
 app.use('/medias', mediasRouter)
+app.use('/tweets', tweetsRouter)
 
 // other solution for static files
 // using router we can customize

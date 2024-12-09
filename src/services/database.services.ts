@@ -3,6 +3,7 @@ import { config } from 'dotenv'
 import User from '~/models/schemas/User.schema.js'
 import RefreshToken from '~/models/schemas/RefreshToken.schema'
 import Follower from '~/models/schemas/Follower.schema'
+import Tweet from '~/models/schemas/Tweet.schema'
 
 config()
 
@@ -68,6 +69,10 @@ class DatabaseService {
     if (!exists) {
       this.followers.createIndex({ user_id: 1, followed_user_id: 1 })
     }
+  }
+
+  get tweets(): Collection<Tweet> {
+    return this.db.collection(process.env.DB_TWEETS_COLLECTION as string)
   }
 
   // create a getter function to get users collection

@@ -196,7 +196,18 @@ interface Tweet {
   created_at: Date
   updated_at: Date
 }
+```
 
+- Validate TweetBody (from req.body) by using `validate` function to wrap `checkSchema` (from `express-validator` lib) to check some main properties. This validation is conducted in `tweets.middlewares`
+
+We will choose to validate some main properties: 
+1. `type` must be one of 4 types of tweet (tweet, retweet, comment, quote tweet) 
+2. `audience` must be `everyone` or `circle tweet`
+3. `content` will be empty if is it `retweet`, and must be string if it belongs to other types
+4. `parent_id` must be `_id` of `parent tweet` (if tweet type is among retweet, comment or quotetweet), or will be `null` if type is tweet
+5. `hashtags`, `mentions`, `medias` must be arrays
+
+```ts
 // client sends data in request body
 interface TweetReqBody {
   type: TweetType
@@ -208,3 +219,142 @@ interface TweetReqBody {
   medias: Media[]
 }
 ```
+- Create tweet in `tweets.controllers` and `tweets.services`
+Note: after `insertOne` a new tweet to database, it will not return a tweet, but only an object to indicate that a new tweet has been created. To get a tweet as a return, we need to add one more step, `findOne` the tweet in database
+
+```ts
+{
+  acknowledged: true,
+  insertedId: new ObjectId("64adffdsfdsfsdfsfsdfdsf")
+}
+```
+- Tweet schema validation in MongoDb
+```ts
+{
+  $jsonSchema: {
+    bsonType: 'object',
+    title: 'tweets object validation',
+    required: [
+      '_id',
+      'user_id',
+      'type',
+      'audience',
+      'content',
+      'parent_id',
+      'hashtags',
+      'mentions',
+      'medias',
+      'guest_views',
+      'user_views',
+      'created_at',
+      'updated_at'
+    ],
+    properties: {
+      _id: {
+        bsonType: 'objectId',
+        description: '\'_id\' must be an ObjectId and is required'
+      },
+      user_id: {
+        bsonType: 'objectId',
+        description: '\'user_id\' must be an ObjectId and is required'
+      },
+      type: {
+        bsonType: 'int',
+        'enum': [
+          0,
+          1,
+          2,
+          3
+        ],
+        description: '\'type\' must be a TweetType and is required'
+      },
+      audience: {
+        bsonType: 'int',
+        'enum': [
+          0,
+          1
+        ],
+        description: '\'audience\' must be a TweetAudience and is required'
+      },
+      content: {
+        bsonType: 'string',
+        description: '\'content\' must be a string and is required'
+      },
+      parent_id: {
+        bsonType: [
+          'null',
+          'objectId'
+        ],
+        description: '\'parent_id\' must be a null or ObjectId and is required'
+      },
+      hashtags: {
+        bsonType: 'array',
+        uniqueItems: true,
+        additionalProperties: false,
+        items: {
+          bsonType: 'objectId'
+        },
+        description: '\'hashtags\' must be an array and is required'
+      },
+      mentions: {
+        bsonType: 'array',
+        uniqueItems: true,
+        additionalProperties: false,
+        items: {
+          bsonType: 'objectId'
+        },
+        description: '\'mentions\' must be an array and is required'
+      },
+      medias: {
+        bsonType: 'array',
+        uniqueItems: true,
+        additionalProperties: false,
+        items: {
+          bsonType: 'object',
+          required: [
+            'url',
+            'type'
+          ],
+          additionalProperties: false,
+          properties: {
+            type: {
+              'enum': [
+                0,
+                1,
+                2
+              ],
+              description: '\'type\' is required and can only be one of the given enum values'
+            },
+            url: {
+              bsonType: 'string',
+              description: '\'url\' is a required field of type string'
+            }
+          }
+        },
+        description: '\'medias\' must be an array and is required'
+      },
+      guest_views: {
+        bsonType: 'int',
+        minimum: 0,
+        description: '\'guest_views\' must be a number and is required'
+      },
+      user_views: {
+        bsonType: 'int',
+        minimum: 0,
+        description: '\'user_views\' must be a number and is required'
+      },
+      created_at: {
+        bsonType: 'date',
+        description: '\'created_at\' must be a date and is required'
+      },
+      updated_at: {
+        bsonType: 'date',
+        description: '\'updated_at\' must be a date and is required'
+      }
+    },
+    additionalProperties: false
+  }
+}
+```
+
+- Create `hashtags`. When we create a new tweet

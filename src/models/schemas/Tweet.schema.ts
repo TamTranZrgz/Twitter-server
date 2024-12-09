@@ -3,17 +3,17 @@ import { TweetAudience, TweetType } from '~/constants/enum'
 import { Media } from '~/models/Others'
 
 interface TweetConstructure {
-  _id?: ObjectId  // _is will be created by db
+  _id?: ObjectId // _is will be created by db
   user_id: ObjectId
   type: TweetType
   audience: TweetAudience
   content: string
-  parent_id: null | ObjectId //  only null if it's the parent tweet
+  parent_id: null | string //  only null if it's the parent tweet
   hashtags: ObjectId[]
-  mentions: ObjectId[]
+  mentions: string[] // string is user_id
   medias: Media[]
-  guest_views: number
-  user_views: number
+  guest_views?: number
+  user_views?: number
   created_at?: Date
   updated_at?: Date
 }
@@ -54,12 +54,12 @@ export default class Tweet {
     this.type = type
     this.audience = audience
     this.content = content
-    this.parent_id = parent_id
+    this.parent_id = parent_id ? new ObjectId(parent_id) : null
     this.medias = medias
-    this.guest_views = guest_views
+    this.guest_views = guest_views || 0
     this.hashtags = hashtags
-    this.mentions = mentions
-    this.user_views = user_views
+    this.mentions = mentions.map((item) => new ObjectId(item))
+    this.user_views = user_views || 0
     this.created_at = created_at || date
     this.updated_at = updated_at || date
   }
