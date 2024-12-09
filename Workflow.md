@@ -357,4 +357,8 @@ Note: after `insertOne` a new tweet to database, it will not return a tweet, but
 }
 ```
 
-- Create `hashtags`. When we create a new tweet
+- Create `hashtags`. When we create a new tweet, we might include some hashtags. We will check whether this hashtag has been added to database, if has been created, we retrieve it, if not, a new hashtag will be created.
+
+- `Bookmark` and `unbookmark` a tweet
+- `Like` and `unlike` a tweet
+- Validate `tweet_id` before `like`/`unlike` or `bookmark`/`unbookmark`

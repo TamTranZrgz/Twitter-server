@@ -5,6 +5,9 @@ import { MediaType, TweetAudience, TweetType } from '~/constants/enum'
 import { TWEETS_MESSAGES } from '~/constants/messages'
 import { numberEnumToArray } from '~/utils/commons'
 import { validate } from '~/utils/validation'
+import databaseService from '~/services/database.services'
+import { ErrorWithStatus } from '~/models/Errors'
+import HTTP_STATUS from '~/constants/httpStatus'
 
 const tweetTypes = numberEnumToArray(TweetType)
 // console.log(tweetTypes) // [0,1,2,3]
@@ -107,4 +110,37 @@ export const createTweetValidator = validate(
       }
     }
   })
+)
+
+export const tweetIdValidator = validate(
+  checkSchema(
+    {
+      tweet_id: {
+        // isMongoId: {
+        //   errorMessage: TWEETS_MESSAGES.INVALID_TWEET_ID
+        // } -> check here will throw an error of 422 which is normally used for submitting form
+        custom: {
+          options: async (value, { req }) => {
+            if(!ObjectId.isValid(value)) {
+              throw new ErrorWithStatus({
+                status: HTTP_STATUS.BAD_REQUEST,
+                message: TWEETS_MESSAGES.INVALID_TWEET_ID
+              })
+            }
+            const tweet = await databaseService.tweets.findOne({
+              _id: new ObjectId(value as string)
+            })
+            if (!tweet) {
+              throw new ErrorWithStatus({
+                status: HTTP_STATUS.NOT_FOUND,
+                message: TWEETS_MESSAGES.TWEET_NOT_FOUND
+              })
+            }
+            return true
+          }
+        }
+      }
+    },
+    ['params', 'body']
+  )
 )
