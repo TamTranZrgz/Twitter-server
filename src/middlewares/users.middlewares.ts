@@ -617,3 +617,18 @@ export const changePasswordValidator = validate(
     confirm_password: confirmPasswordSchema
   })
 )
+
+export const isUserLoggedInvalidator = (middleware: (req: Request, res: Response, next: NextFunction) => void) => {
+  // after inserting a middleware, return a handler
+  return (req: Request, res: Response, next: NextFunction) => {
+    // req.header vs req.headers
+    // console.log(req.header('Authorization'))
+    // console.log(req.headers.authorization) // Authorization
+    // if there ia access_token, check access_token
+    // if there is not access_token, not check
+    if (req.headers.authorization) {
+      return middleware(req, res, next)
+    }
+    next()
+  }
+}

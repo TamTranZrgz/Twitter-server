@@ -1,13 +1,16 @@
 import { checkSchema } from 'express-validator'
 import { ObjectId } from 'mongodb'
 import { isEmpty } from 'lodash'
-import { MediaType, TweetAudience, TweetType } from '~/constants/enum'
-import { TWEETS_MESSAGES } from '~/constants/messages'
+import { MediaType, TweetAudience, TweetType, UserVerifyStatus } from '~/constants/enum'
+import { TWEETS_MESSAGES, USERS_MESSAGES } from '~/constants/messages'
 import { numberEnumToArray } from '~/utils/commons'
 import { validate } from '~/utils/validation'
 import databaseService from '~/services/database.services'
 import { ErrorWithStatus } from '~/models/Errors'
 import HTTP_STATUS from '~/constants/httpStatus'
+import { Request, Response, NextFunction } from 'express'
+import Tweet from '~/models/schemas/Tweet.schema'
+import { wrapRequestHandler } from '~/utils/handlers'
 
 const tweetTypes = numberEnumToArray(TweetType)
 // console.log(tweetTypes) // [0,1,2,3]
@@ -121,7 +124,7 @@ export const tweetIdValidator = validate(
         // } -> check here will throw an error of 422 which is normally used for submitting form
         custom: {
           options: async (value, { req }) => {
-            if(!ObjectId.isValid(value)) {
+            if (!ObjectId.isValid(value)) {
               throw new ErrorWithStatus({
                 status: HTTP_STATUS.BAD_REQUEST,
                 message: TWEETS_MESSAGES.INVALID_TWEET_ID
@@ -136,6 +139,9 @@ export const tweetIdValidator = validate(
                 message: TWEETS_MESSAGES.TWEET_NOT_FOUND
               })
             }
+
+            // gan 'tweet' to request, and use it later for 'audienceValidator'
+            ;(req as Request).tweet = tweet
             return true
           }
         }
@@ -144,3 +150,42 @@ export const tweetIdValidator = validate(
     ['params', 'body']
   )
 )
+
+// check tweet audience (circle or everyone)
+// To use async/await in express handler, must use try/catch, if not will need to wrap this func
+export const audienceValidator = wrapRequestHandler(async (req: Request, res: Response, next: NextFunction) => {
+  const tweet = req.tweet as Tweet
+
+  // if audience is Tweet Circle
+  if (tweet.audience === TweetAudience.TwitterCircle) {
+    // check if this viewer of this Tweet has been logged in
+    if (!req.decoded_authorization) {
+      throw new ErrorWithStatus({
+        status: HTTP_STATUS.UNAUTHORIZED,
+        message: USERS_MESSAGES.ACCESS_TOKEN_IS_REQUIRED
+      })
+    }
+
+    // check whether tweet author's account has been deleted or blocked
+    const author = await databaseService.users.findOne({
+      _id: new ObjectId(tweet.user_id)
+    })
+    if (!author || author.verify === UserVerifyStatus.Banned) {
+      throw new ErrorWithStatus({
+        status: HTTP_STATUS.NOT_FOUND,
+        message: USERS_MESSAGES.USER_NOT_FOUND
+      })
+    }
+
+    // check whether this tweet's viewer is inside Tweet Circle of tweet's author and not tweet's author
+    const { user_id } = req.decoded_authorization
+    const isInTweeterCircle = author.twitter_circle.some((user_circle_id) => user_circle_id.equals(user_id))
+    if (!author._id.equals(user_id) && !isInTweeterCircle) {
+      throw new ErrorWithStatus({
+        status: HTTP_STATUS.FORBIDDEN,
+        message: TWEETS_MESSAGES.TWEET_IS_NOT_PUBLIC
+      })
+    }
+  }
+  next() // if tweet is for everyone, not need to check, just go to next func
+})

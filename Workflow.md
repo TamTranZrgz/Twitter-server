@@ -28,41 +28,44 @@
 
 ```ts
 databaseService.users.updateOne(
-        {
-          _id: new ObjectId(user_id)
-        },
-        {
-          // update email_verify_token
-          $set: {
-            email_verify_token: '',
-            verify: UserVerifyStatus.Verified,
-            // updated_at: new Date()
-          },
-          $currentDate: {
-            updated_at: true
-          }
-        }
-      )
+  {
+    _id: new ObjectId(user_id)
+  },
+  {
+    // update email_verify_token
+    $set: {
+      email_verify_token: '',
+      verify: UserVerifyStatus.Verified
+      // updated_at: new Date()
+    },
+    $currentDate: {
+      updated_at: true
+    }
+  }
+)
 ```
 
 - Or we can use `$$NOW` for MongoDb to update it's data
+
 ```ts
 databaseService.users.updateOne(
-        {
-          _id: new ObjectId(user_id)
-        }, [
-        {
-          // update email_verify_token
-          $set: {
-            email_verify_token: '',
-            verify: UserVerifyStatus.Verified,
-            updated_at: '$$NOW'
-          }
-        }]
-      )
+  {
+    _id: new ObjectId(user_id)
+  },
+  [
+    {
+      // update email_verify_token
+      $set: {
+        email_verify_token: '',
+        verify: UserVerifyStatus.Verified,
+        updated_at: '$$NOW'
+      }
+    }
+  ]
+)
 ```
 
-## 97. Resend verified email 
+## 97. Resend verified email
 
 - This happens when user clicks on button to ask for resending another verified email
 - We will use a new email_verify_token (in case the old one is expired), and update that new token into the db Users
@@ -117,11 +120,11 @@ interface Follower {
 
 - use react client to test this function
 
-## 116 - 135. Media 
+## 116 - 135. Media
 
 - Choose between Formidable/Multer
 - Formidable is used for most frameworks of Nodejs (ExpressJs, fastify), while Multer is only used for ExpressJs
-- Create new Router for media files 
+- Create new Router for media files
 - Create a temp directory to save uploaded files (index.ts file)
 - As `Formidable` allows us to upload different types of file, we need to use option `filter` to retrieve only `image` file
 - Optimize file size with `sharp` (size, quality, exif & metadata, etc.). [Sharp](https://sharp.pixelplumbing.com/). In this project, I will convert those pics into `jpeg` type
@@ -129,7 +132,7 @@ interface Follower {
 - Note 2: if we keep `uploads` folder in local repo, we cant shsare files with other team members. Solution will be upload files into another platform provider such as S3, or our server.
 - To differentiate the running environment (test/production/development) in establishing path (ex: display photos on link). Use `minimist` package: to parse argument options in commands (Ex: script in package.json)
 - Serving static files: for example images, css files, js files, etc. => use `express.static` built-in middleware function in Express. Another solution is using router which will allow us to customize acording to our preference
-- Upload multiple images can be also used for uploading a single image. So we can renunite upload a single image and multiple images. 
+- Upload multiple images can be also used for uploading a single image. So we can renunite upload a single image and multiple images.
 - Upload video is the same as upload image. However, can lead to error `Error [ERR_HTTP_HEADERS_SENT]: Cannot set headers after they are sent to the client`. We can use buil-in `express.static` middleware to solve this problem, by streaming videos.
 - Streaming video: will not load the whole content of video at once, but step by step. We cal also customize `streaming` function acording to our demand.
 - Another way to work with video is `HLS Streaming`.
@@ -138,9 +141,10 @@ interface Follower {
 
 - `index`: use 1 index to optimize efficiency of MongoDb. `_id` index is default in MongoDb
 - `compound index`: use multiple indexes (choose more than 1 index at the same time)
-- `index` asc (ex: name_1) and des (ex: age_-1)
+- `index` asc (ex: name*1) and des (ex: age*-1)
 
 Ex: this query will display documents in order of age (asc) (`index` age with `asc` and name with `asc`)
+
 ```sql
 { age: {$lt: 50}, sex: 'male' }
 ```
@@ -175,9 +179,9 @@ Note: 1 collection only has maximum 64 index. 1 collection only has 1 index text
 
 - Optimize `index` when initiate server: normally, everytime we initialize the server, the `index` process will repeat again. It will affect performance, but not logic. So we will modify code to assure that `index` process will not be repeated again, by using `async` and check if `index` has been existed in db
 
-## 148 - 174. Tweet functions
+## 148 - 159. Tweet functions
 
-- Create `Tweet` schema -> Tweet will have following properties and functions: containing text, hashtags, mentions, images, videos; can be displayed for everyone or only Tweet circle; difining who can cmt (everyone, who we are following, or who we are mentioning); will have nested tweet (tweet which contain children). 
+- Create `Tweet` schema -> Tweet will have following properties and functions: containing text, hashtags, mentions, images, videos; can be displayed for everyone or only Tweet circle; difining who can cmt (everyone, who we are following, or who we are mentioning); will have nested tweet (tweet which contain children).
 
 ```ts
 // schema
@@ -200,8 +204,9 @@ interface Tweet {
 
 - Validate TweetBody (from req.body) by using `validate` function to wrap `checkSchema` (from `express-validator` lib) to check some main properties. This validation is conducted in `tweets.middlewares`
 
-We will choose to validate some main properties: 
-1. `type` must be one of 4 types of tweet (tweet, retweet, comment, quote tweet) 
+We will choose to validate some main properties:
+
+1. `type` must be one of 4 types of tweet (tweet, retweet, comment, quote tweet)
 2. `audience` must be `everyone` or `circle tweet`
 3. `content` will be empty if is it `retweet`, and must be string if it belongs to other types
 4. `parent_id` must be `_id` of `parent tweet` (if tweet type is among retweet, comment or quotetweet), or will be `null` if type is tweet
@@ -219,8 +224,9 @@ interface TweetReqBody {
   medias: Media[]
 }
 ```
+
 - Create tweet in `tweets.controllers` and `tweets.services`
-Note: after `insertOne` a new tweet to database, it will not return a tweet, but only an object to indicate that a new tweet has been created. To get a tweet as a return, we need to add one more step, `findOne` the tweet in database
+  Note: after `insertOne` a new tweet to database, it will not return a tweet, but only an object to indicate that a new tweet has been created. To get a tweet as a return, we need to add one more step, `findOne` the tweet in database
 
 ```ts
 {
@@ -228,7 +234,9 @@ Note: after `insertOne` a new tweet to database, it will not return a tweet, but
   insertedId: new ObjectId("64adffdsfdsfsdfsfsdfdsf")
 }
 ```
+
 - Tweet schema validation in MongoDb
+
 ```ts
 {
   $jsonSchema: {
@@ -362,3 +370,118 @@ Note: after `insertOne` a new tweet to database, it will not return a tweet, but
 - `Bookmark` and `unbookmark` a tweet
 - `Like` and `unlike` a tweet
 - Validate `tweet_id` before `like`/`unlike` or `bookmark`/`unbookmark`
+- create route `/tweets/:tweet_id` to get tweet detail.
+
+## 160 - 165. Aggregation Pipelines in MongoDb
+
+### 1. Aggregation Pipelines
+
+- aggregation Pipelines can have more than 1 stages and are in orders. Each stage act upon the results of the previous stage.
+
+- Ex: in `tweets` collection, we have `hashtags` field as an array of `ObjectId` of different hashtags. Now we want to map this `hashtags` field with the real `hashtags` collection to get more info about those hashtags (such as name).
+
+-- match: filter the documents from tweet collection
+
+```shell
+{
+  _id: ObjectId('675745664af89cbda57b0e8c')
+}
+```
+
+Here We will have a tweet document with `hashtags` field as only an array of `ObjectId`
+
+-- lookup: perform a join between 2 collections
+
+```shell
+ * from: The target collection.
+ * localField: The local join field.
+ * foreignField: The target join field.
+ * as: The name for the results.
+ * pipeline: Optional pipeline to run on the foreign collection.
+ * let: Optional variables to use in the pipeline field stages.
+ */
+{
+  from: "hashtags",
+  localField: "hashtags",
+  foreignField: "_id",
+  as: "results" // can be named as "hashtags"
+}
+```
+
+-- $project : add new field(s) to a document with computed value, or reassign field(s) from a document with computed value => Display or no display field(s) in document in a stage of a pipeline
+
+Note: value `0` to exclude a field from document, but `1` to display only that field from document
+
+--- Ex1: exclude `mentions` field from a `tweet` document
+
+```ts
+/**
+ * specifications: The fields to
+ *   include or exclude.
+ */
+{
+  mentions: 0
+}
+```
+
+--- Ex2: include only `mentions` and `hashtags` fields from a `tweet` document
+
+```shell
+/**
+ * specifications: The fields to
+ *   include or exclude.
+ */
+{
+  mentions: 1,
+  hashtags: 1
+}
+```
+
+However, in this stage, all data of `users` in `mentions` field will be displayed including `password`.
+
+### 2. Aggregation Pipelines Operators
+
+- is operation in each stage
+
+Ex1: continue with above example, here we will choose which fields in `mentions` field to display. In this case, we will use `$addFields` (not `$project`) to add a new `mentions` field which will overwrite the old `mentions`
+
+-- $map: like `map()` in Javascript -> return a new array with resolved items
+
+```shell
+/**
+ * Use '$addFields' to add new field
+ * And use '$map' to get only projected items
+ * specifications: The fields to
+ *   include or exclude.
+ */
+{
+  mentions: {
+    $map: {
+      input: "$mentions",
+      as: "mention",
+      in: {
+        _id: "$$mention._id",
+        name: "$$mention.name",
+        username: "$$mention.username",
+        email: "$$mention.email"
+      }
+    }
+  }
+}
+```
+
+Ex2: We want to count how many bookmarks for a tweet. But `bookmarks` is not a field in `tweets`, but a collection. To count the number of bookmark, we ned to connect `bookmarks` and `tweets` collections.
+
+```shell
+/**
+ * Count number of bookmark
+ * Use '$addFields' and '$size'
+ * newField: The new field name.
+ * expression: The new field expression.
+ */
+{
+  bookmart_count: {
+    $size: "$bookmarks"
+  }
+}
+```
