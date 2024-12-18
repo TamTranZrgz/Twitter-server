@@ -130,9 +130,131 @@ export const tweetIdValidator = validate(
                 message: TWEETS_MESSAGES.INVALID_TWEET_ID
               })
             }
-            const tweet = await databaseService.tweets.findOne({
-              _id: new ObjectId(value as string)
-            })
+
+            // get tweet using aggreration (get this from Mongo Compass)
+            // use destructuring to get the first item
+            const [tweet] = await databaseService.tweets
+              .aggregate<Tweet>([
+                {
+                  $match: {
+                    _id: new ObjectId(value as string)
+                  }
+                },
+                {
+                  $lookup: {
+                    from: 'hashtags',
+                    localField: 'hashtags',
+                    foreignField: '_id',
+                    as: 'hashtags'
+                  }
+                },
+                {
+                  $lookup: {
+                    from: 'users',
+                    localField: 'mentions',
+                    foreignField: '_id',
+                    as: 'mentions'
+                  }
+                },
+                {
+                  $addFields: {
+                    mentions: {
+                      $map: {
+                        input: '$mentions',
+                        as: 'mention',
+                        in: {
+                          _id: '$$mention._id',
+                          name: '$$mention.name',
+                          username: '$$mention.username',
+                          email: '$$mention.email'
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  $lookup: {
+                    from: 'bookmarks',
+                    localField: '_id',
+                    foreignField: 'tweet_id',
+                    as: 'bookmarks'
+                  }
+                },
+                {
+                  $lookup: {
+                    from: 'likes',
+                    localField: '_id',
+                    foreignField: 'tweet_id',
+                    as: 'likes'
+                  }
+                },
+                {
+                  $lookup: {
+                    from: 'tweets',
+                    localField: '_id',
+                    foreignField: 'parent_id',
+                    as: 'children_tweets'
+                  }
+                },
+                {
+                  $addFields: {
+                    bookmart_count: {
+                      $size: '$bookmarks'
+                    },
+                    like_count: {
+                      $size: '$likes'
+                    },
+                    children_tweet_count: {
+                      $size: '$children_tweets'
+                    },
+                    retweets_count: {
+                      $size: {
+                        $filter: {
+                          input: '$children_tweets',
+                          as: 'item',
+                          cond: {
+                            $eq: ['$$item.type', TweetType.Retweet]
+                          }
+                        }
+                      }
+                    },
+                    comments_count: {
+                      $size: {
+                        $filter: {
+                          input: '$children_tweets',
+                          as: 'item',
+                          cond: {
+                            $eq: ['$$item.type', TweetType.Comment]
+                          }
+                        }
+                      }
+                    },
+                    requote_count: {
+                      $size: {
+                        $filter: {
+                          input: '$children_tweets',
+                          as: 'item',
+                          cond: {
+                            $eq: ['$$item.type', TweetType.QuoteTweet]
+                          }
+                        }
+                      }
+                    }
+                    // views: {
+                    //   $add: ['$user_views', '$guest_views']
+                    // }
+                  }
+                },
+                {
+                  $project: {
+                    children_tweets: 0
+                  }
+                }
+              ])
+              .toArray()
+
+            //console.log(tweet)
+
             if (!tweet) {
               throw new ErrorWithStatus({
                 status: HTTP_STATUS.NOT_FOUND,

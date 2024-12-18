@@ -485,3 +485,84 @@ Ex2: We want to count how many bookmarks for a tweet. But `bookmarks` is not a f
   }
 }
 ```
+
+Ex3: In Twitter database, `tweets` collection includes all types of tweet (parent tweet, retweet, quote, comment); `bookmarks` is a saperated collection from `tweets` collection. Now we want to retrieve all `children_tweets` (which will have the `parent_id` equal to the `_id` of tweet itself). First use `$lookup` to get `children_tweets`:
+
+```shell
+{
+  from: "tweets",
+  localField: "_id",
+  foreignField: "parent_id",
+  as: "children_tweets"
+}
+```
+
+Now we can use `$filter` & `$equal` to count the quantity of each type of tweet:
+
+```shell
+{
+  bookmart_count: {
+    $size: "$bookmarks"
+  },
+  like_count: {
+    $size: "$likes"
+  },
+  children_tweet_count: {
+    $size: "$children_tweets"
+  },
+  retweets_count: {
+    $size: {
+      $filter: {
+      	input: "$children_tweets",
+        as: "item",
+        cond: {
+          $eq: ["$$item.type", 1]
+        }
+      }
+    }
+  },
+  comments_count: {
+    $size: {
+      $filter: {
+        input: "$children_tweets",
+        as: "item",
+        cond: {
+          $eq: ["$$item.type", 2]
+        }
+      }
+    }
+  },
+  requote_count: {
+    $size: {
+      $filter: {
+        input: "$children_tweets",
+        as: "item",
+        cond: {
+          $eq: ["$$item.type", 3]
+        }
+      }
+    }
+  }
+}
+```
+
+And we can use `$add` to calculate total views of a tweet
+
+```shell
+views: {
+    $add: ["$user_views", "$guest_views"]
+  }
+```
+
+### 3. Apply aggregation in nodejs to `tweets`
+
+- First, export file from Mongo Compas
+- Attach this syntax inside `validateTweetId` to retrieve all info needed for tweet (aggregation), and attached that tweet to the `req` body for later use.
+
+## 166-174. Work with tweet views, comments, retweet, quotes and pagination
+
+### 1. Increase view for tweet: get tweet from db (use `validateTweetId` middleware), increase views (use `increaseView` from tweet services, and mutate the result to get view updated in `getTweetController`)
+
+### 2. Get tweet children (comments, retweet, quotes) with pagination
+
+- will display tweet comments with `infinite scroll` which will display a certain tweets at one time and appear others when user scrolls on the screen.
