@@ -1,8 +1,8 @@
 import { Request, Response } from 'express'
 import { ParamsDictionary } from 'express-serve-static-core'
 import { TweetType } from '~/constants/enum'
-import { TWEETS_MESSAGES } from '~/constants/messages'
-import { TweetReqBody } from '~/models/requests/Tweet.request'
+import { FEEDS_MESSAGES, TWEETS_MESSAGES } from '~/constants/messages'
+import { Pagination, TweetParam, TweetQuery, TweetReqBody } from '~/models/requests/Tweet.requests'
 import { TokenPayload } from '~/models/requests/User.requests'
 import tweetsService from '~/services/tweets.services'
 
@@ -28,7 +28,8 @@ export const getTweetController = async (req: Request, res: Response): Promise<v
   const tweet = {
     ...req.tweet,
     guest_views: result.guest_views,
-    user_views: result.user_views
+    user_views: result.user_views,
+    updated_at: result.updated_at
   }
 
   res.json({
@@ -37,16 +38,22 @@ export const getTweetController = async (req: Request, res: Response): Promise<v
   })
 }
 
-export const getTweetChildrenController = async (req: Request, res: Response): Promise<void> => {
-  const tweet_type = Number(req.query.tweet_type as string) as TweetType // query params are string, so needed to be turn into number
-  const limit = Number(req.query.limit as string) // query params are string, so needed to be turn into number
-  const page = Number(req.query.page as string) // query params are string, so needed to be turn into number
+export const getTweetChildrenController = async (
+  req: Request<TweetParam, any, any, TweetQuery>,
+  res: Response
+): Promise<void> => {
+  const tweet_type = Number(req.query.tweet_type) as TweetType // query params are string, so needed to be turn into number
+  const limit = Number(req.query.limit) // query params are string, so needed to be turn into number
+  const page = Number(req.query.page) // query params are string, so needed to be turn into number
+
+  const user_id = req.decoded_authorization?.user_id
 
   const { tweets, total } = await await tweetsService.getTweetChidren({
     tweet_id: req.params.tweet_id,
     tweet_type,
     limit,
-    page
+    page,
+    user_id
   })
 
   res.json({
@@ -57,6 +64,25 @@ export const getTweetChildrenController = async (req: Request, res: Response): P
       limit, // number of item of each page
       page, // page order
       total_page: Math.ceil(total / limit)
+    }
+  })
+}
+
+export const getnewFeedsController = async (
+  req: Request<ParamsDictionary, any, any, Pagination>,
+  res: Response
+): Promise<void> => {
+  const user_id = req.decoded_authorization?.user_id as string
+  const limit = Number(req.query.limit) // query params are string, so needed to be turn into number
+  const page = Number(req.query.page) // query params are string, so needed to be turn into number
+  const result = await tweetsService.getNewFeeds({ user_id, limit, page })
+  res.json({
+    message: FEEDS_MESSAGES.GET_NEW_FEEDS_SUCCESSFULLY,
+    result: {
+      tweets: result.tweets,
+      limit, // number of item of each page
+      page, // page order
+      total_page: Math.ceil(result.total / limit)
     }
   })
 }

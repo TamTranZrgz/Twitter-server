@@ -559,10 +559,30 @@ views: {
 - First, export file from Mongo Compas
 - Attach this syntax inside `validateTweetId` to retrieve all info needed for tweet (aggregation), and attached that tweet to the `req` body for later use.
 
-## 166-174. Work with tweet views, comments, retweet, quotes and pagination
+## 166-174. Work with tweet views, comments, retweet, quotes and pagination; and more
 
-### 1. Increase view for tweet: get tweet from db (use `validateTweetId` middleware), increase views (use `increaseView` from tweet services, and mutate the result to get view updated in `getTweetController`)
+### 1. Increase view for tweet: get tweet from db (use `validateTweetId` middleware), increase views (use `increaseView` from tweet services, and mutate the result to get view updated in `getTweetController` -> use `findOneAndUpdate`)
 
 ### 2. Get tweet children (comments, retweet, quotes) with pagination
 
-- will display tweet comments with `infinite scroll` which will display a certain tweets at one time and appear others when user scrolls on the screen.
+- This app will display tweet comments with `infinite scroll` which will display a certain tweets at one time and appear others when user scrolls on the screen.
+
+### 3. Increase view for children tweet
+
+- in `getTweetChildren` service, add `updateMany` syntax to update views for children tweet (including user_views and guest_views).
+
+### 4. Add getTweetChildrenValidator
+
+- in `tweets.middleware`, add validator before getting tweet children, validate factors attached in url query such as `limit`, `page` and `tweet_type`. While `limit` and `page` must be number, `tweet_type` must be in the range of `TweetType`.
+
+### 5. Fake data automatically with `Faker` library
+
+- create fake data used for testing and development - > use `faker-js` library
+- create `fake.ts` file in `utils` folder
+
+### 6. Work with feeds
+
+- use `aggregation` in Mongo Compass to get the process to retrieve all new feeds for a user
+- get all user_id of uers that I have been following
+- get all tweets (new feeds) of users that I have been following
+- paginate those feeds and update their views (user_views) when it is seen by users (in this case by me)

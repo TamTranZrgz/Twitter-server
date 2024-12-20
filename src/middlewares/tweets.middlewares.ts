@@ -2,7 +2,7 @@ import { checkSchema } from 'express-validator'
 import { ObjectId } from 'mongodb'
 import { isEmpty } from 'lodash'
 import { MediaType, TweetAudience, TweetType, UserVerifyStatus } from '~/constants/enum'
-import { TWEETS_MESSAGES, USERS_MESSAGES } from '~/constants/messages'
+import { LIMIT_MESSAGES, PAGE_MESSAGES, TWEETS_MESSAGES, USERS_MESSAGES } from '~/constants/messages'
 import { numberEnumToArray } from '~/utils/commons'
 import { validate } from '~/utils/validation'
 import databaseService from '~/services/database.services'
@@ -17,6 +17,7 @@ const tweetTypes = numberEnumToArray(TweetType)
 const tweetAudiences = numberEnumToArray(TweetAudience)
 // console.log(tweetAudiences) // [0,1]
 const mediaTypes = numberEnumToArray(MediaType)
+
 export const createTweetValidator = validate(
   checkSchema({
     // check type must be among 4 types (tweet, retweet, comment, quote tweet)
@@ -115,6 +116,7 @@ export const createTweetValidator = validate(
   })
 )
 
+// check tweet_id
 export const tweetIdValidator = validate(
   checkSchema(
     {
@@ -270,6 +272,54 @@ export const tweetIdValidator = validate(
       }
     },
     ['params', 'body']
+  )
+)
+
+// check tweet_type (factor in url query)
+export const getTweetChildrenValidator = validate(
+  checkSchema(
+    {
+      tweet_type: {
+        isIn: {
+          options: [tweetTypes],
+          errorMessage: TWEETS_MESSAGES.INVALID_TWEET_TYPE
+        }
+      }
+    },
+    ['query']
+  )
+)
+
+// check limit, and page (factors in url query)
+export const paginationValidator = validate(
+  checkSchema(
+    {
+      limit: {
+        isNumeric: true,
+        custom: {
+          options: async (value, { req }) => {
+            const num = Number(value) // initially, limit is 'string'
+            if (num > 100 || num < 1) {
+              throw new Error(LIMIT_MESSAGES.LIMIT_MUST_BE_LESS_THAN_100_AND_MORE_THAN_1)
+            }
+            return true
+          }
+        }
+      },
+      page: {
+        isNumeric: true,
+        custom: {
+          options: async (value, { req }) => {
+            const num = Number(value) // initially, limit is 'string'
+            if (num < 1) {
+              throw new Error(PAGE_MESSAGES.PAGE_MUST_BE_MORE_THAN_OR_EQUAL_TO_1)
+            }
+            return true
+          }
+        }
+      }
+    },
+    ['query']
   )
 )
 

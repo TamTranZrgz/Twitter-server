@@ -134,6 +134,18 @@ export const TWEETS_MESSAGES = {
   GET_TWEET_CHILDREN_SUCCESSFULLY: "Get tweet's children successfully"
 } as const
 
+export const FEEDS_MESSAGES = {
+  GET_NEW_FEEDS_SUCCESSFULLY: 'Get new feeds successfully'
+} as const
+
+export const LIMIT_MESSAGES = {
+  LIMIT_MUST_BE_LESS_THAN_100_AND_MORE_THAN_1: 'Limit must be less than 100 and more than 1'
+} as const
+
+export const PAGE_MESSAGES = {
+  PAGE_MUST_BE_MORE_THAN_OR_EQUAL_TO_1: 'Page must be more than or equal to 1'
+} as const
+
 export const BOOKMARKS_MESSAGES = {
   BOOKMARKS_TWEET_SUCCESSFULLY: 'Bookmark tweet successfully',
   UNBOOKMARKS_TWEET_SUCCESSFULLY: 'Unbookmark tweet successfully'
