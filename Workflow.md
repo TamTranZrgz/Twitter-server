@@ -586,3 +586,23 @@ views: {
 - get all user_id of uers that I have been following
 - get all tweets (new feeds) of users that I have been following
 - paginate those feeds and update their views (user_views) when it is seen by users (in this case by me)
+
+## 17. Advanced Search in Twitter
+
+### 17.1. Analyze basic search functions in twitter
+
+- analyze search term: use `encodeURIComponent` to encode `empty space` search term
+
+```ts
+const a = 'btc scammed'
+encodeURIComponent(a) // 'btc%20scammed'
+decodeURIComponent('btc%20scammed') // 'btc scammed'
+```
+
+- twitter will filter `search term` in different areas: tweets, uername, people, and tweets that have images or videos, or results accroding to date, etc.
+
+- search tweets on MongoDb, we should `index` fields that we will base on, for example, this app will index `content` field
+
+- In this app, we only host database on MongoDb Atlas, but we will use `Text Search on Self-Managed Deployments` for further posibilities (whether database is hosted on Mongo Atlas or VPS) [Text Search](https://www.mongodb.com/docs/manual/text-search/) or [More_details_on_text_search_of_self_managed_deployments](https://www.mongodb.com/docs/manual/core/link-text-indexes/#std-label-text-search-on-premises)
+
+### 17.2. Design search route
