@@ -605,4 +605,40 @@ decodeURIComponent('btc%20scammed') // 'btc scammed'
 
 - In this app, we only host database on MongoDb Atlas, but we will use `Text Search on Self-Managed Deployments` for further posibilities (whether database is hosted on Mongo Atlas or VPS) [Text Search](https://www.mongodb.com/docs/manual/text-search/) or [More_details_on_text_search_of_self_managed_deployments](https://www.mongodb.com/docs/manual/core/link-text-indexes/#std-label-text-search-on-premises)
 
-### 17.2. Design search route
+### 17.2. Design search route, pagination with aggregation
+
+- use `aggregation` in MongoDb Compass to get feeds.
+- for pagination: need 3 variables (limit, page, total_page)
+
+### 17.3. Fix bug of not finding some search term
+
+- Reason: in MongoDb, 'stop words' (ex: who) are words that are considered as not having meaning, so will be ignored when searching
+- Solution: create index for tweet's content with `indexTweets` function in `database.services.ts`. Delete `content` index in MongoDb database
+
+### 17.4. Implement `encodeURIComponent` in postman
+
+- Note: on URL, it's not good to leave blank space "\_"
+- add this function in pre-request script in postman for `search` api
+
+```shell
+// console.log(pm.request.url.query)
+// console.log(pm.request.url.query.get("content"))
+const content = pm.request.url.query.get('content')
+pm.request.url.query.remove('content')
+pm.request.url.query.add(`content=${encodeURIComponent(content)}`)
+console.log(pm.request.url.query)
+```
+
+### 17.5. Filter tweets which have images or video
+
+- add `media_type` parameter to `SearchQuery` and `searchController`
+
+### 17.6. Search tweets from a user who we have followed or cualquier person
+
+- Note: all params passed to URL will be string , whether boolean `true` or `false` or number `0` or `1`
+- ad `people_follow` to `SearchQuery`
+- add `people_follow` parameter to `SearchController`
+- add `accessTokenValidator` and `verifiedUserValidator` to get `user_id`
+- `people_follow` is optional, controller only processes when `people_follow` is true
+
+### 17.7. Search term validator
