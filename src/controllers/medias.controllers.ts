@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from 'express'
 import path from 'path'
 import fs from 'fs'
-import mime from 'mime'
 import { UPLOAD_IMAGE_DIR, UPLOAD_VIDEO_DIR } from '~/constants/dir'
 import { USERS_MESSAGES } from '~/constants/messages'
 import mediasService from '~/services/medias.services'
@@ -53,7 +52,8 @@ export const serveVideoController = (req: Request, res: Response, next: NextFunc
 
 // Customize `streaming` function from `express.static` middleware
 // Open client side, check `network`, in `request headers`, we will se how `range` property change when the video is running
-export const serveVideoStreamController = (req: Request, res: Response, next: NextFunction): void => {
+export const serveVideoStreamController = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  const mime = (await import('mime')).default // Dynamic import here
   const range = req.headers.range
   if (!range) {
     res.status(HTTP_STATUS.BAD_REQUEST).send('Require Range Header')

@@ -642,3 +642,190 @@ console.log(pm.request.url.query)
 - `people_follow` is optional, controller only processes when `people_follow` is true
 
 ### 17.7. Search term validator
+
+## 18. AWS
+
+We will use 2 products:
+
+- simple email: send email (ses)
+- s3: file repo
+
+### 18.1. Price and Account Register
+
+### 18.2. AWS SES
+
+- AWS: cloud services of Amazon
+- Amazon SES: send email (limit 50k in one day)
+
+- Amazon SES (simple Email Service) is designed for server to send a bulk of email, it's different from Gmail which is free for personal use. Gmail is not designed to send email as a big quantity (limit of 500 emails and receive within 24 hours)
+- To work with AWS SES, we need to know programming, and create server by ourselve to send email with Amazon SES
+
+- We will use `thanh.tam.tran.zrgz@gmail.com` email to send email with `Amazon SES` as server -> choose `create identity` and choose `Email address` as your identity type. Add at least 2 emails to `Identities` part.
+
+- Configure IAM (identity and Access Management) service to manage accounts, authorization to AWS services
+
+### 18.3. Test Sending email
+
+- add aws_asscess_key and aws_secret_key to `.env` file
+
+```ts
+AWS_ACCESS_KEY_ID = 'AKIA4IM3HJ5SGxxxxxx'
+AWS_SECRET_ACCESS_KEY = 'jSinRHtCt1O7za1xxxxxxxxxxxx'
+AWS_REGION = 'eu-west-3'
+SES_FROM_ADDRESS = 'thanh.tam.tran.zrgz@gmail.com'
+```
+
+- install package
+
+```bash
+npm i @aws-sdk/client-ses
+```
+
+- create file `send-email.js`
+
+```js
+/* eslint-disable @typescript-eslint/no-require-imports */
+/* eslint-disable no-undef */
+const { SendEmailCommand, SESClient } = require('@aws-sdk/client-ses')
+const { config } = require('dotenv')
+
+config()
+
+// Create SES service object.
+const sesClient = new SESClient({
+  region: process.env.AWS_REGION,
+  credentials: {
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID
+  }
+})
+
+const createSendEmailCommand = ({
+  fromAddress,
+  toAddresses,
+  ccAddresses = [],
+  body,
+  subject,
+  replyToAddresses = []
+}) => {
+  return new SendEmailCommand({
+    Destination: {
+      /* required */
+      CcAddresses: ccAddresses instanceof Array ? ccAddresses : [ccAddresses],
+      ToAddresses: toAddresses instanceof Array ? toAddresses : [toAddresses]
+    },
+    Message: {
+      /* required */
+      Body: {
+        /* required */
+        Html: {
+          Charset: 'UTF-8',
+          Data: body
+        }
+      },
+      Subject: {
+        Charset: 'UTF-8',
+        Data: subject
+      }
+    },
+    Source: fromAddress,
+    ReplyToAddresses: replyToAddresses instanceof Array ? replyToAddresses : [replyToAddresses]
+  })
+}
+
+const sendVerifyEmail = async (toAddress, subject, body) => {
+  const sendEmailCommand = createSendEmailCommand({
+    fromAddress: process.env.SES_FROM_ADDRESS,
+    toAddresses: toAddress,
+    body,
+    subject
+  })
+
+  try {
+    return await sesClient.send(sendEmailCommand)
+  } catch (e) {
+    console.error('Failed to send email.')
+    return e
+  }
+}
+
+sendVerifyEmail('tamtran2885@gmail.com', 'Tiêu đề email', '<h1>Nội dung email duoc gui tu tam tran ngay 5 thang 1</h1>')
+```
+
+- send email by command `node`
+
+```bash
+node send-email.js
+```
+
+### 18.4. Send email after registering
+
+- create `email.ts` file in `utils` folder, copy content of `send-email.js` to `email.ts`, and modify it.
+
+- in function `register` of `users.services`, add function `sendVerifyEmail` after fisnishing register
+
+```ts
+console.log('email_verify_token', email_verify_token)
+
+// Flow verify email:
+// 1. Server send email to user
+// 2. User click link in email to verify email
+// 3. Client send request to server with emai_verify_token
+// 4. Server verify email_verify_token
+// 5. Client receive access_token and refresh_token
+
+await sendVerifyEmail(
+  payload.email,
+  'Verify your email',
+  `
+      <h1>Verify your email:</h1>
+      <p>Click <a href="${process.env.CLIENT_URL}/verify-email?token=${email_verify_token}">here</a> to verify your email</p>
+    `
+)
+```
+
+### 18.5. Send email with a template `html`
+
+- create a `verify-email.html` in `templates` folder
+- create `email.ts` in `utils` (copy from `send-email.js` file) , use `fs.readFileSync` to read file template, add `sendVerifyRegisterEmail` and `sendForgotPasswordEmail` functions.
+
+- add these two functions to `resendVerifyEmail` and `forgotPassword` in `users.services`
+
+### 18.6. Code `Verify Email` and `Reset Password` page
+
+### 18.7. Create and connect to S3
+
+- service to store files, images, videos... You can even deploy React ; Vuel, Angular, etc.
+
+- click `Create Bucket`, add `name` and create bucket
+
+- use nodejs to connect to this bucket: [Nodejs-s3-bucket](https://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/s3-node-examples.html)
+
+- install package
+
+```bash
+npm i @aws-sdk/client-s3
+```
+
+- create `s3` file in `utils` folder, add it to `index` file
+  Note: remember to add permisson `AmazonS3FullAccess` to access to S3 on Amazon account panel
+
+### 18.8. Upload file to S3
+
+- add package
+
+```bash
+npm i @aws-sdk/lib-storage
+```
+
+- add more code to `s3` to upload file to S3 on AWS
+
+- reference: [Set-permisson-for-website-access-s3](https://docs.aws.amazon.com/AmazonS3/latest/userguide/WebsiteAccessPermissionsReqd.html)
+
+- prevent from dowloading image when clicking on image link on S3:
+
+```ts
+ContentType: 'image/jpeg'
+```
+
+### 18.9. Upload image through rout

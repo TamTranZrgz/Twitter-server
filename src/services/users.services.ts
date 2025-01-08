@@ -11,6 +11,7 @@ import { USERS_MESSAGES } from '~/constants/messages'
 import { ErrorWithStatus } from '~/models/Errors'
 import HTTP_STATUS from '~/constants/httpStatus'
 import Follower from '~/models/schemas/Follower.schema'
+import { sendForgotPasswordEmail, sendVerifyRegisterEmail } from '~/utils/email'
 
 class UsersService {
   // Token services
@@ -135,7 +136,18 @@ class UsersService {
       })
     )
 
+    // email-verify_token after register
     console.log('email_verify_token', email_verify_token)
+
+    // Flow verify email:
+    // 1. Server send email to user
+    // 2. User click link in email to verify email
+    // 3. Client send request to server with emai_verify_token
+    // 4. Server verify email_verify_token
+    // 5. Client receive access_token and refresh_token
+
+    await sendVerifyRegisterEmail(payload.email, email_verify_token)
+
     return {
       access_token,
       refresh_token
@@ -356,10 +368,13 @@ class UsersService {
     }
   }
 
-  async resendVerifyEmail(user_id: string) {
+  async resendVerifyEmail(user_id: string, email: string) {
     const email_verify_token = await this.signEmailVerifyToken({ user_id, verify: UserVerifyStatus.Unverified })
-    // Supose evrify email has been sent to client
-    console.log('Resend verify email: ', email_verify_token)
+
+    // Send verify email  to client
+    await sendVerifyRegisterEmail(email, email_verify_token)
+
+    // console.log('Resend verify email: ', email_verify_token)
 
     // Update value of email_verify_token in user document
     await databaseService.users.updateOne(
@@ -381,7 +396,7 @@ class UsersService {
     }
   }
 
-  async forgotPassword({ user_id, verify }: { user_id: string; verify: UserVerifyStatus }) {
+  async forgotPassword({ user_id, verify, email }: { user_id: string; email: string; verify: UserVerifyStatus }) {
     // get forgot_password_token
     const forgot_password_token = await this.signForgotPasswordToken({
       user_id,
@@ -401,7 +416,9 @@ class UsersService {
     // when user click on this link included in email, it will send a link to server, server will verify if this token is already expired and valid before moving to reset_password view
     // route: /verify-forgot-password
     // supposed that we have sent email to client
-    console.log('Forgot password token :', forgot_password_token)
+    // console.log('Forgot password token :', forgot_password_token)
+    await sendForgotPasswordEmail(email, forgot_password_token)
+
     return {
       message: USERS_MESSAGES.CHECK_EMAIL_TO_RESET_PASSWORD
     }

@@ -146,15 +146,17 @@ export const resendVerifyEmailController = async (req: Request, res: Response, n
     res.status(HTTP_STATUS.NOT_FOUND).json({
       message: USERS_MESSAGES.USER_NOT_FOUND
     })
+    return
   }
 
   if ((user as User).verify === UserVerifyStatus.Verified) {
     res.status(HTTP_STATUS.OK).json({
       message: USERS_MESSAGES.EMAIL_ALREADY_VERIFIED_BEFORE
     })
+    return
   }
 
-  const result = await usersService.resendVerifyEmail(user_id)
+  const result = await usersService.resendVerifyEmail(user_id, user.email)
   res.json(result)
 }
 
@@ -165,8 +167,8 @@ export const forgotPasswordController = async (
 ): Promise<void> => {
   // If req.user is undefined, we can not get info from destructuring
   // so we need to define type as User
-  const { _id, verify } = req.user as User
-  const result = await usersService.forgotPassword({ user_id: (_id as ObjectId).toString(), verify })
+  const { _id, verify, email } = req.user as User
+  const result = await usersService.forgotPassword({ user_id: (_id as ObjectId).toString(), verify, email })
   res.json(result)
 }
 

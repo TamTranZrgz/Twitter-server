@@ -12,8 +12,12 @@ import tweetsRouter from './routes/tweets.routes'
 import bookmarksRouter from './routes/bookmarks.routes'
 import likesRouter from './routes/likes.routes'
 import searchRouter from './routes/search.routes'
+import cors from 'cors'
+import path from 'path'
+import './utils/s3'
 // import '~/utils/fake'
 
+// console.log(path.resolve)
 config()
 
 // connect to MongoDb Atlas by mongodb driver
@@ -25,6 +29,15 @@ databaseService.connect().then(() => {
 })
 
 const app = express()
+
+// Allow requests from http://localhost:3000
+app.use(
+  cors({
+    origin: 'http://localhost:3000', // Replace with your frontend's URL
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+  })
+)
 
 const port = process.env.PORT || 4000
 // console.log(port)

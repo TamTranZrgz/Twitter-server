@@ -10,21 +10,36 @@ export const defaultErrorHandler: ErrorRequestHandler = (
   res: Response,
   next: NextFunction
 ): void => {
-  if (error instanceof ErrorWithStatus) {
-    res.status(error.status).json(omit(error, ['status']))
-    return
-  }
+  try {
+    if (error instanceof ErrorWithStatus) {
+      res.status(error.status).json(omit(error, ['status']))
+      return
+    }
 
-  // get properties from 'error' (object) as an array, and use 'for' loop later
-  Object.getOwnPropertyNames(error).forEach((key) => {
-    Object.defineProperty(error, key, {
-      enumerable: true
+    const finalError: any = {}
+    // get properties from 'error' (object) as an array, and use 'for' loop later
+    Object.getOwnPropertyNames(error).forEach((key) => {
+      if (
+        !Object.getOwnPropertyDescriptor(error, key)?.configurable ||
+        !Object.getOwnPropertyDescriptor(error, key)?.writable
+      ) {
+        return
+      }
+
+      finalError[key] = error[key]
+      // Object.defineProperty(error, key, {
+      //   enumerable: true
+      // })
+
+      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+        message: finalError.message,
+        errorInfo: omit(finalError, ['stack'])
+      })
     })
-  })
-
-  res.status(error.status || HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
-    message: error.message,
-    errorInfo: omit(error, ['stack'])
-  })
-  return
+  } catch (err) {
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      message: 'Internal server error',
+      errorInfo: omit(err as any, ['stack'])
+    })
+  }
 }
