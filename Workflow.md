@@ -828,4 +828,96 @@ npm i @aws-sdk/lib-storage
 ContentType: 'image/jpeg'
 ```
 
-### 18.9. Upload image through rout
+### 18.9. Upload image and video through route
+
+## 19. Websocket
+
+- websocket: giao thuc giao tiep 2 chieu giua trinh duyet va may chu theo thoi gian thuc. Vd: tin nhan tro chuyen, tro choi ban sung dien tu, thong tin thi truong chung khoan (hien thi gia thay doi) , etc. ma khong can goi api
+
+- socket.io la 1 thu vien javascript cho phep chung ta su dung websocket trong cac ung dung web. Trong truong hop trinh duyet qua cu, khong co websocket, thi socket.io se cung cap a fallback - 1 co che du phong de su dung websocket tren trinh duyet.
+
+### 19.1. Install and initialize on server nodejs (with express framework) the socket.io package
+
+```bash
+npm install socket.io
+npm install --save-optional bufferutil utf-8-validate
+```
+
+- add package to `index` file
+
+```ts
+const app = express()
+
+const httpServer = createServer(app)
+```
+
+- sustitute `app.listen` for `httpServer.listen`
+
+```ts
+httpServer.listen(port, () => {
+  console.log(`Server is running at port ${port}`)
+})
+```
+
+- create a new instance `io` on server
+
+```ts
+// socket io
+const io = new Server(httpServer, {
+  /* options */
+  // giver permisson for only client (localhost:3000) to get access to server
+  cors: {
+    origin: 'http://localhost:3000'
+  }
+})
+
+// event to listen an event that ask for connection to server
+io.on('connection', (socket) => {
+  // console.log(socket)
+  console.log(`user ${socket.id} connected`)
+  socket.on('disconnect', () => {
+    console.log(`user ${socket.id} disconnected`)
+  })
+})
+```
+
+### 19.2. Install and initialize socket.io on client side
+
+```bash
+npm install socket.io-client
+```
+
+- add code to `Chat` page to create connection with server
+
+```jsx
+export default function Chat() {
+  useEffect(() => {
+    const socket = io(import.meta.env.VITE_API_URL)
+    socket.on('connect', () => {
+      console.log(socket.id)
+    })
+    socket.on('disconnect', () => {
+      console.log(socket.id) // undefined
+    })
+
+    // when user leave this page, the socket on client will also be disconnected
+    return () => {
+      socket.disconnect()
+    }
+  }, [])
+  return <div>Chat</div>
+}
+```
+
+### 19.3. Socket Emit
+
+- Look for `The Socket instance` in `Client` on docs of socket.io
+
+- Server and client will use `socket.emit` to invoke events to each other. And use `socket.on` to receive event from each other.
+
+### 19.4. User loggin from client
+
+- Trick: loggin with api, get `access_token` and `refresh_token`.
+- From client, call `/users/me` to get own profile (put it in useEffect to call api everytime refresh page again)
+
+### 19.5. Private message between 2 peopel

@@ -15,6 +15,8 @@ import searchRouter from './routes/search.routes'
 import cors from 'cors'
 import path from 'path'
 import './utils/s3'
+import { createServer } from 'http'
+import { Server } from 'socket.io'
 // import '~/utils/fake'
 
 // console.log(path.resolve)
@@ -30,14 +32,10 @@ databaseService.connect().then(() => {
 
 const app = express()
 
+const httpServer = createServer(app)
+
 // Allow requests from http://localhost:3000
-app.use(
-  cors({
-    origin: 'http://localhost:3000', // Replace with your frontend's URL
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization']
-  })
-)
+app.use(cors())
 
 const port = process.env.PORT || 4000
 // console.log(port)
@@ -68,6 +66,52 @@ app.use('/static/video', express.static(UPLOAD_VIDEO_DIR))
 app.use(defaultErrorHandler)
 // console.log(typeof defaultErrorHandler);
 
-app.listen(port, () => {
+// socket io
+const io = new Server(httpServer, {
+  /* options */
+  cors: {
+    origin: 'http://localhost:3000'
+  }
+})
+
+const users: {
+  [key: string]: {
+    socket_id: string
+  }
+} = {}
+
+// io and socket are two different instances
+io.on('connection', (socket) => {
+  // console.log(socket)
+  console.log(`user ${socket.id} connected`)
+
+  // display socket.auth (contain _id of user) from client
+  const user_id = socket.handshake.auth._id
+  users[user_id] = {
+    socket_id: socket.id
+  }
+  console.log(users)
+  // {
+  //   '677ffff9c6e3086a46c01f3a': { socket_id: '_C2MOTZ_6yFJQIoHAAAB' },
+  //   '677ffea492da2f05eaab9f26': { socket_id: 'E3IUheSm6lin95sAAAAD' }
+  // }
+
+  socket.on('private message', (data) => {
+    // data.to => 'to' get from client side => _id
+    const receiver_socket_id = users[data.to].socket_id
+    socket.to(receiver_socket_id).emit('receive private message', {
+      content: data.content,
+      from: user_id
+    })
+  })
+
+  socket.on('disconnect', () => {
+    delete users[user_id]
+    console.log(`user ${socket.id} disconnected`)
+    console.log(users)
+  })
+})
+
+httpServer.listen(port, () => {
   console.log(`Server is running at port ${port}`)
 })
