@@ -920,4 +920,50 @@ export default function Chat() {
 - Trick: loggin with api, get `access_token` and `refresh_token`.
 - From client, call `/users/me` to get own profile (put it in useEffect to call api everytime refresh page again)
 
-### 19.5. Private message between 2 peopel
+### 19.5. Private message between 2 people
+
+- In this Twitter app, to send message, we need an identity for user. When a user start to chat, needs to send info line username and identity (socket id)
+- At this stage, only one person can send message, the other can only receive
+
+### 19.6. CSS of sender and receiver of messages
+
+- display messages have been sent, not only messages have been received
+
+### 19.7. Send and receive messages between 2 users
+
+- to know whom we are chatting with, need to know \_id of that person
+- suppose we will have username of a person
+
+### 19.8. Design schema for data chat
+
+- in steps before, users just exchange info, but nothing has been saved to database => thiet ke mongodb schame, create a collection to save these conversation
+- Analyze: 1 user can have many messages => relationship 1 to many many
+
+### 19.8. Route to get conversation (list of messages) even when press F5
+
+- to get list of message of a conversation: need user_id of sender and user_id of receiver. Because our user_id is already in access_token, we don't need to pass our user_id, only pass user_id of receiver
+- add pagination (limit, page, total)
+
+### 19.9. Apply API get conversations to client chat
+
+- on React chat page, press F5 , conversations still display, not disappear
+- press F5, component will be unmounted and mounted again, so add code in useEffect
+
+### 19.20. Add getConversationValidator and paginationValidator to route
+
+- add `getConversationValidator` in `users.middleware`
+- reuse `paginationValidator` in ``tweets.middleware`
+
+### 19.21. Code inifinite scroll for React chat/conversations
+
+### 19.22. Middleware for Server Instance
+
+- use middleware socket.io to check validation of message sender. The middleware function will be executed for every upcoming connection.
+
+- First in this step, this socket middleware will verify user becofre let user connect to sociket io, and this middleware only runs one time when connect (check authorization). => put this middleware before the `connection` event of socket.io
+
+### 19.23. Middleware for socket instance
+
+- Middleware will run when user sends an event (ex: send message) -> put this middleware inside `connection` event of socket.io
+
+### 19.24. Refactor `index` file

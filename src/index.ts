@@ -7,7 +7,7 @@ import mediasRouter from './routes/medias.routes'
 import { initFolder } from './utils/file'
 import { UPLOAD_VIDEO_DIR } from './constants/dir'
 import staticRouter from './routes/static.routes'
-import { MongoClient } from 'mongodb'
+import { MongoClient, ObjectId } from 'mongodb'
 import tweetsRouter from './routes/tweets.routes'
 import bookmarksRouter from './routes/bookmarks.routes'
 import likesRouter from './routes/likes.routes'
@@ -16,7 +16,10 @@ import cors from 'cors'
 import path from 'path'
 import './utils/s3'
 import { createServer } from 'http'
-import { Server } from 'socket.io'
+
+import conversationsRouter from './routes/conversations.routes'
+import initSocket from './utils/socket'
+
 // import '~/utils/fake'
 
 // console.log(path.resolve)
@@ -50,6 +53,7 @@ app.use('/tweets', tweetsRouter)
 app.use('/bookmarks', bookmarksRouter)
 app.use('/likes', likesRouter)
 app.use('/search', searchRouter)
+app.use('/conversations', conversationsRouter)
 
 // other solution for static files
 // using router we can customize
@@ -66,51 +70,7 @@ app.use('/static/video', express.static(UPLOAD_VIDEO_DIR))
 app.use(defaultErrorHandler)
 // console.log(typeof defaultErrorHandler);
 
-// socket io
-const io = new Server(httpServer, {
-  /* options */
-  cors: {
-    origin: 'http://localhost:3000'
-  }
-})
-
-const users: {
-  [key: string]: {
-    socket_id: string
-  }
-} = {}
-
-// io and socket are two different instances
-io.on('connection', (socket) => {
-  // console.log(socket)
-  console.log(`user ${socket.id} connected`)
-
-  // display socket.auth (contain _id of user) from client
-  const user_id = socket.handshake.auth._id
-  users[user_id] = {
-    socket_id: socket.id
-  }
-  console.log(users)
-  // {
-  //   '677ffff9c6e3086a46c01f3a': { socket_id: '_C2MOTZ_6yFJQIoHAAAB' },
-  //   '677ffea492da2f05eaab9f26': { socket_id: 'E3IUheSm6lin95sAAAAD' }
-  // }
-
-  socket.on('private message', (data) => {
-    // data.to => 'to' get from client side => _id
-    const receiver_socket_id = users[data.to].socket_id
-    socket.to(receiver_socket_id).emit('receive private message', {
-      content: data.content,
-      from: user_id
-    })
-  })
-
-  socket.on('disconnect', () => {
-    delete users[user_id]
-    console.log(`user ${socket.id} disconnected`)
-    console.log(users)
-  })
-})
+initSocket(httpServer)
 
 httpServer.listen(port, () => {
   console.log(`Server is running at port ${port}`)
