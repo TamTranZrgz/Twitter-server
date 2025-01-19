@@ -1,6 +1,5 @@
 import { config } from 'dotenv'
 import argv from 'minimist'
-import { forgotPasswordController } from '~/controllers/users.controllers'
 
 // console.log(process.argv)
 
@@ -11,12 +10,16 @@ import { forgotPasswordController } from '~/controllers/users.controllers'
 // ] => node intex.ts --development
 
 const options = argv(process.argv.slice(2)) // get third element in the above array
-config()
+console.log(options)
+
+export const isProduction = options.env === 'production'
+
+config({
+  path: options.env ? `.env.${options.env}` : '.env'
+})
 
 // console.log(options)
 // console.log(options.development) // check the dev environment is development ?
-
-export const isProduction = Boolean(options.production)
 
 export const envConfig = {
   port: (process.env.PORT as string) || 4000,
