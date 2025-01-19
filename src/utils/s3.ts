@@ -1,16 +1,15 @@
 import { Upload } from '@aws-sdk/lib-storage'
 import { S3 } from '@aws-sdk/client-s3'
-import { config } from 'dotenv'
+import { envConfig } from '~/constants/config'
 import path from 'path'
 import fs from 'fs'
-config()
 
 const s3 = new S3({
-  region: process.env.AWS_REGION,
+  region: envConfig.awsRegion,
   credentials: {
     // locate inside IAM service -> Users , use the same with SES (send email)
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY as string,
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID as string
+    secretAccessKey: envConfig.awsSecretAccessKey as string,
+    accessKeyId: envConfig.awsAccessKeyId as string
   }
 })
 

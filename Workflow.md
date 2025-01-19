@@ -967,3 +967,21 @@ export default function Chat() {
 - Middleware will run when user sends an event (ex: send message) -> put this middleware inside `connection` event of socket.io
 
 ### 19.24. Refactor `index` file
+
+## 20. Swagger for Express.js REST API
+
+- Swagger is a set of tools help us to create a API web docuemnt.
+
+- OpenAPI is an API standards written under YAML or JSON. Swagger will look at this file to build the API web.
+
+- Use `Swagger editor`
+
+- Install 2 packages to display Swagger UI as a webpage just like UI on vs code
+
+```bash
+npm install swagger-ui-express
+npm install --save @types/swagger-ui-express
+
+npm i swagger-jsdoc
+npm install --save @types/swagger-jsdoc
+```

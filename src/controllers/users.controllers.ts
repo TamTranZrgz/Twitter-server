@@ -24,9 +24,7 @@ import {
 import User from '~/models/schemas/User.schema'
 import databaseService from '~/services/database.services'
 import usersService from '~/services/users.services'
-import { config } from 'dotenv'
-import { userInfo } from 'os'
-config()
+import { envConfig } from '~/constants/config'
 
 export const loginController = async (
   req: Request<ParamsDictionary, any, LoginReqBody>,
@@ -51,7 +49,7 @@ export const oauthController = async (req: Request, res: Response): Promise<void
   const { code } = req.query
   // console.log('code: ', code)
   const result = await usersService.oauth(code as string)
-  const urlRedirect = `${process.env.CLIENT_REDIRECT_CALLBACK}?access_token=${result.access_token}&refresh_token=${result.refresh_token}&newUser=${result.newUser}&verify=${result.verify}`
+  const urlRedirect = `${envConfig.clientRedirectCallback}?access_token=${result.access_token}&refresh_token=${result.refresh_token}&newUser=${result.newUser}&verify=${result.verify}`
 
   // redirect to client screen
   res.redirect(urlRedirect)

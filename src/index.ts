@@ -1,5 +1,14 @@
 import express from 'express'
 import { config } from 'dotenv'
+import { MongoClient, ObjectId } from 'mongodb'
+import cors from 'cors'
+import path from 'path'
+import { createServer } from 'http'
+import YAML from 'yaml'
+import fs from 'fs'
+import swaggerUI from 'swagger-ui-express'
+import swaggerJsdoc from 'swagger-jsdoc'
+
 import usersRouter from '~/routes/users.routes'
 import databaseService from '~/services/database.services'
 import { defaultErrorHandler } from './middlewares/error.middlewares'
@@ -7,22 +16,37 @@ import mediasRouter from './routes/medias.routes'
 import { initFolder } from './utils/file'
 import { UPLOAD_VIDEO_DIR } from './constants/dir'
 import staticRouter from './routes/static.routes'
-import { MongoClient, ObjectId } from 'mongodb'
 import tweetsRouter from './routes/tweets.routes'
 import bookmarksRouter from './routes/bookmarks.routes'
 import likesRouter from './routes/likes.routes'
 import searchRouter from './routes/search.routes'
-import cors from 'cors'
-import path from 'path'
 import './utils/s3'
-import { createServer } from 'http'
-
 import conversationsRouter from './routes/conversations.routes'
 import initSocket from './utils/socket'
+import { envConfig } from './constants/config'
 
 // import '~/utils/fake'
 
 // console.log(path.resolve)
+
+// const file = fs.readFileSync(path.resolve('twitter-swagger.yaml'), 'utf8')
+// const swaggerDocument = YAML.parse(file)
+
+const options: swaggerJsdoc.Options = {
+  definition: {
+    openapi: '3.0.0',
+    info: {
+      title: 'X Clone (Twitter API)',
+      version: '1.0.0'
+    }
+  },
+  apis: ['./openapi/*.yaml'] // files containing annotations as above
+}
+
+const openapiSpecification = swaggerJsdoc(options)
+
+// const swaggerDocument = YAML.parse(file)
+
 config()
 
 // connect to MongoDb Atlas by mongodb driver
@@ -40,13 +64,14 @@ const httpServer = createServer(app)
 // Allow requests from http://localhost:3000
 app.use(cors())
 
-const port = process.env.PORT || 4000
+const port = envConfig.port || 4000
 // console.log(port)
 
 // check and create temp directory to save uploaded files
 initFolder()
 
 app.use(express.json())
+app.use('/api-docs', swaggerUI.serve, swaggerUI.setup(openapiSpecification))
 app.use('/users', usersRouter)
 app.use('/medias', mediasRouter)
 app.use('/tweets', tweetsRouter)

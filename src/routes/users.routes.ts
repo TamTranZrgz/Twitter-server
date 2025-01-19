@@ -42,7 +42,7 @@ const usersRouter = Router()
  * Description: Login
  * Path: /login
  * Method: POST
- * Body: { email: string, password: string }
+ * Body: { email: string, password: string}
  */
 usersRouter.post('/login', loginValidator, wrapRequestHandler(loginController))
 
