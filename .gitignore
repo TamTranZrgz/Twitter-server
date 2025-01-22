@@ -47,5 +47,11 @@ dist/
 # images/file/media
 uploads
 
-# docker
+# md file
 docker.md
+CICD.md
+workflow.md
+
+# swagger
+learn-swagger.yaml
+twitter-swagger.yaml
