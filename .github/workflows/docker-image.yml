@@ -16,3 +16,7 @@ jobs:
         run: echo "${{ secrets.TWITTER_ENV_PRODUCTION }}" > .env.production
       - name: Build the Docker image
         run: docker build --progress=plain -t tamtranzrgz/twitter:v4 .
+      - name: Log in to Docker Hub
+        run: docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_PASSWORD }}
+      - name: Push the Docker image
+        run: docker push tamtranzrgz/twitter:v4
