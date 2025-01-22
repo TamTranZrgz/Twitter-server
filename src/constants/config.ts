@@ -1,5 +1,6 @@
 import { config } from 'dotenv'
-import argv from 'minimist'
+import fs from 'fs'
+import path from 'path'
 
 // console.log(process.argv)
 
@@ -9,14 +10,36 @@ import argv from 'minimist'
 //   '--development'
 // ] => node intex.ts --development
 
-const options = argv(process.argv.slice(2)) // get third element in the above array
-console.log(options)
+// const options = argv(process.argv.slice(2)) // get third element in the above array
+// console.log(options)
 
-export const isProduction = options.env === 'production'
+const env = process.env.NODE_ENV
+
+const envFilename = `.env.${env}`
+
+if (!env) {
+  console.log('You have not given NODE_ENV variable (ex: development, production)')
+  console.log(`Discover NODE_ENV = ${env}`)
+  process.exit(1)
+}
+console.log(`Discover NODE_ENV = ${env}, therefore app will use environemnt file as ${envFilename}`)
+
+if (!fs.existsSync(path.resolve(envFilename))) {
+  console.log(`Can not find environment file ${envFilename}`)
+  console.log(
+    `Note: App  does not use file .env, for example file .env.development will be used if environemnt is development`
+  )
+  console.log(`Please create file ${envFilename} and get a reference from .env.example file`)
+  process.exit(1)
+}
+
+console.log('env', env)
 
 config({
-  path: options.env ? `.env.${options.env}` : '.env'
+  path: envFilename
 })
+
+export const isProduction = env === 'production'
 
 // console.log(options)
 // console.log(options.development) // check the dev environment is development ?

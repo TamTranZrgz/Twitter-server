@@ -30,30 +30,32 @@ class MediasService {
         await sharp(file.filepath).jpeg().toFile(newPath)
 
         // upload file to s3
-        const s3Result = await uploadFileToS3({
-          fileName: 'images/' + newFullFileName,
-          filePath: newPath,
-          contentType: mime.getType(newPath) as string
-        })
+        // const s3Result = await uploadFileToS3({
+        //   fileName: 'images/' + newFullFileName,
+        //   filePath: newPath,
+        //   contentType: mime.getType(newPath) as string
+        // })
 
-        await Promise.all([
-          // remove image file in temp directory
-          fsPromise.unlink(file.filepath), // unlink the path to image file in temp directory
+        // await Promise.all([
+        //   // remove image file in temp directory
+        //   fsPromise.unlink(file.filepath), // unlink the path to image file in temp directory
 
-          // remove image file in images folder
-          fsPromise.unlink(newPath)
-        ])
+        //   // remove image file in images folder
+        //   fsPromise.unlink(newPath)
+        // ])
 
-        return {
-          url: s3Result.Location as string,
-          type: MediaType.Image
-        }
         // return {
-        //   url: isProduction
-        //     ? `${process.env.HOST}/static/image/${newFullFileName}`
-        //     : `http://localhost:${process.env.PORT}/static/image/${newFullFileName}`,
+        //   url: s3Result.Location as string,
         //   type: MediaType.Image
         // }
+
+        // Upload to server, not S3
+        return {
+          url: isProduction
+            ? `${process.env.HOST}/static/image/${newFullFileName}`
+            : `http://localhost:${process.env.PORT}/static/image/${newFullFileName}`,
+          type: MediaType.Image
+        }
       })
     )
     return result

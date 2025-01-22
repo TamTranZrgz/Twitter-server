@@ -1,13 +1,19 @@
 import express from 'express'
 import { config } from 'dotenv'
 import { MongoClient, ObjectId } from 'mongodb'
-import cors from 'cors'
 import path from 'path'
 import { createServer } from 'http'
-import YAML from 'yaml'
 import fs from 'fs'
+
+// Swagger API endpoint
 import swaggerUI from 'swagger-ui-express'
 import swaggerJsdoc from 'swagger-jsdoc'
+import YAML from 'yaml'
+
+// Improve page security
+import helmet from 'helmet'
+import cors, { CorsOptions } from 'cors'
+import { rateLimit } from 'express-rate-limit'
 
 import usersRouter from '~/routes/users.routes'
 import databaseService from '~/services/database.services'
@@ -23,7 +29,7 @@ import searchRouter from './routes/search.routes'
 import './utils/s3'
 import conversationsRouter from './routes/conversations.routes'
 import initSocket from './utils/socket'
-import { envConfig } from './constants/config'
+import { envConfig, isProduction } from './constants/config'
 
 // import '~/utils/fake'
 
@@ -59,10 +65,28 @@ databaseService.connect().then(() => {
 
 const app = express()
 
+// Express Rate Limit
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  limit: 100, // Limit each IP to 100 requests per `window` (here, per 15 minutes).
+  standardHeaders: 'draft-8', // draft-6: `RateLimit-*` headers; draft-7 & draft-8: combined `RateLimit` header
+  legacyHeaders: false // Disable the `X-RateLimit-*` headers.
+  // store: ... , // Redis, Memcached, etc. See below.
+})
+
+// Apply the rate limiting middleware to all requests.
+app.use(limiter)
+
 const httpServer = createServer(app)
 
-// Allow requests from http://localhost:3000
-app.use(cors())
+// Helmet
+app.use(helmet())
+const corsOptions: CorsOptions = {
+  origin: isProduction ? envConfig.clientUrl : '*'
+}
+
+// Cors
+app.use(cors(corsOptions))
 
 const port = envConfig.port || 4000
 // console.log(port)
@@ -95,7 +119,7 @@ app.use('/static/video', express.static(UPLOAD_VIDEO_DIR))
 app.use(defaultErrorHandler)
 // console.log(typeof defaultErrorHandler);
 
-initSocket(httpServer)
+// initSocket(httpServer)
 
 httpServer.listen(port, () => {
   console.log(`Server is running at port ${port}`)

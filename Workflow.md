@@ -985,3 +985,93 @@ npm install --save @types/swagger-ui-express
 npm i swagger-jsdoc
 npm install --save @types/swagger-jsdoc
 ```
+
+## 21. Deploy
+
+### 21.1 Install packages to protect server:
+
+- helmet
+- cors (configure to let only CLIENT_URL access to server)
+- express-rate-limit: limit repeated requests to public APIs, to prevent DoS attacks (limit the rate of an IP address request in a specific period)
+
+### 21.2. Deploy flow
+
+- Rent a VPS (run Linus or Window Server)
+- On VPS, install NodeJs, Mongo Db, Nginx, PM2, Git, ...
+- Pull code from Github to VPS
+- Build code
+- Add file .env.production
+- Run code (npm run stat:prod)
+- Configure Nginx to point to domain, and manage Server
+
+Note: use terminal to transfer variables from .env to Linux server on VPS
+
+### 21.2. PM2
+
+Is a tool to manage processes of Nodejs easily and effectively, by providing following features:
+
+- auto restart app when app crashes
+- auto restart app when server restarts
+- monitor Nodejs processes
+
+```bash
+$ npm install pm2@latest -g
+```
+
+1. Run app by PM2
+
+```bash
+pm2 start index.js
+pm2 start dist/index.js
+```
+
+2. Run app with ecosystem.config.js file
+
+```bash
+pm2 start ecosystem.config.js
+```
+
+3. Run app with ecosystem.config.js file in production environment
+
+```bash
+pm2 start ecosystem.config.js --env production
+```
+
+4. Display metric dashboard
+
+```bash
+pm2 monit
+```
+
+3. Log info of process
+
+```bash
+pm2 log twitter --lines 100
+```
+
+Stop a process
+
+```bash
+pm2 stop twitter
+```
+
+[PM2-document](https://pm2.keymetrics.io/docs/usage/quick-start/)
+
+## 22. Docker
+
+- Docker is a nen tang ao hoa cho phep dong goi ung dung vao 1 container doc lap voi may chu. Docker giup dong bo moi truong giua may chu, giup chung ta de dang chuyen doi giua cac moi truong khac nhau. Ban chi can cai docker, ko can cai nhieu may ao khac nhau.
+
+Muon chay 1 app co 2 cach:
+
+- Tai source code ve , build into image, va run container dua tren image do
+- Tai image do ve, roi chay container dua tren image do (nguoi ta da dong goi source code thanh image san roi)
+
+### 22.1. Image vs Container
+
+- Docker Image la phan mem (app hoac he thong) da duoc dong goi
+- Docker Container la mot instance cua Docker Image. 1 Docker Image co the tao ra nhieu Docker Container
+
+### 22.2. Dockerfile
+
+- create `Dockerfile` file
+- download `node:18.17-alpine3.18` image from `hub.docker.com`

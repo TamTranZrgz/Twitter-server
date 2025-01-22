@@ -1,0 +1,8 @@
+version: '3.8'
+services:
+  twitter:
+    image: tamtranzrgz/twitter:v2
+    ports:
+      - '4000:4000'
+    volumes:
+      - 'D:/Workspace/NodeJs/Twitter/uploads/images:/app/uploads/images'
